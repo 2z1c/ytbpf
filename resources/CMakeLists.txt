@@ -80,6 +80,7 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
     add_dependencies(${target_name} ${bpf_virt_obj_target})
     set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     target_compile_options(${target_name} PRIVATE -g -O2 -Wall -Wmissing-field-initializers -Werror)
+    target_link_options(${target_name} PRIVATE "-static")
     target_link_libraries(${target_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libbpf/libbpf.a -lelf -lz)
     target_include_directories(${target_name} PRIVATE ${TARGET_OBJS_DIR}/ )
 
