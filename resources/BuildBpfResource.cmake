@@ -39,7 +39,7 @@ add_custom_target(
     DEPENDS ${BPFTOOL}
 )
 
-function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
+function(custom_build_bpf_skel_obj target_name _bpf_src_)
     # string(REPLACE ".bpf.c" ".skel.h"  "${_bpf_src_}")
     get_filename_component(bpf_file_src_name "${_bpf_src_}" NAME)
 
@@ -71,7 +71,9 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
         DEPENDS ${TARGET_OBJS_DIR}/${bpf_file_skel_name} ${TARGET_OBJS_DIR}/${bpf_file_obj_name}
     )
 
-    add_executable(${target_name}  ${_app_srcs_})
+
+    message("ARGN    =   ${ARGN}")
+    add_executable(${target_name}  ${ARGN})
     add_dependencies(${target_name} ${bpf_virt_obj_target})
     set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     target_compile_options(${target_name} PRIVATE -g -O2 -Wall -Wmissing-field-initializers -Werror)
