@@ -13,7 +13,6 @@ const volatile int test_int = 99;
 SEC("tracepoint/sched/sched_wakeup")
 int spi_spi_message_start(struct trace_event_raw_sys_enter  *ctx)
 {
-	int i = 0 ;
 	bpf_printk("helloworld test_int:%d\n", test_int);	
 	return 0;
 }

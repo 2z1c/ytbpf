@@ -8,9 +8,9 @@ add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/libbpf/libbpf.a
     DEPENDS ${LIBBPF_SOURCES}
     COMMENT "build static libbpf libary"
-    COMMENT "make -C ${LIBBPF_DIR}/src BUILD_STATIC_ONLY=1 OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf DESTDIR=${CMAKE_CURRENT_BINARY_DIR} INCLUDEDIR= LIBDIR= UAPIDIR= -j22 install"
-    COMMAND make -C ${LIBBPF_DIR}/src BUILD_STATIC_ONLY=1 OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf DESTDIR=${CMAKE_CURRENT_BINARY_DIR} INCLUDEDIR= LIBDIR= UAPIDIR= -j22 || true
-    COMMAND make -C ${LIBBPF_DIR}/src BUILD_STATIC_ONLY=1 OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf DESTDIR=${CMAKE_CURRENT_BINARY_DIR} INCLUDEDIR= LIBDIR= UAPIDIR= -j22 install
+    # COMMENT "make -C ${LIBBPF_DIR}/src BUILD_STATIC_ONLY=1 OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf DESTDIR=${CMAKE_CURRENT_BINARY_DIR} INCLUDEDIR= LIBDIR= UAPIDIR= -j22 install"
+    COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/libbpf
+    COMMAND make -C ${LIBBPF_DIR}/src BUILD_STATIC_ONLY=1 OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf INCLUDEDIR= LIBDIR= UAPIDIR= -j22 
 )
 add_custom_target(
     libbpf_obj 
@@ -45,17 +45,18 @@ function(add_custom_bpf_exectuable target_name src_files)
     target_link_libraries(${target_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libbpf/libbpf.a)
 endfunction()
 
-function(custom_build_bpf_skel_obj target_name _bpf_src_)
+function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
     # string(REPLACE ".bpf.c" ".skel.h"  "${_bpf_src_}")
     get_filename_component(bpf_file_src_name "${_bpf_src_}" NAME)
 
-    string(REPLACE ".bpf.c" ".skel.h" bpf_file_skel_name "${bpf_file_src_name}")
-    string(REPLACE ".bpf.c" ".bpf.o" bpf_file_obj_name "${bpf_file_src_name}")
+    string(REPLACE ".bpf.c" ".skel.h" bpf_file_skel_name ${bpf_file_src_name})
+    string(REPLACE ".bpf.c" ".bpf.o" bpf_file_obj_name ${bpf_file_src_name})
 
     set(TARGET_OBJS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${target_name}.objs")
     set(BPFCFLAGS "-g" "-O2" "-Wall")
     set(BPF_SKEL_INCLUDES "-I${CMAKE_CURRENT_SOURCE_DIR}/arm64" "-I${LIBBPF_DIR}/include/uapi" "-I${CMAKE_CURRENT_SOURCE_DIR}")
 
+    set(GXX_COMPILE_FLAGS "-Wall -O2 -std=c++17")
     # message("BPF_SRC: ${_bpf_src_} ${bpf_file_src_name} ${bpf_file_skel_name} ${bpf_file_obj_name}")
 
     add_custom_command(
@@ -70,10 +71,15 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_)
     )
 
     add_custom_target(
-        ${target_name}
-        DEPENDS ${TARGET_OBJS_DIR} ${TARGET_OBJS_DIR}/${bpf_file_skel_name} ${TARGET_OBJS_DIR}/${bpf_file_obj_name}
+        ${bpf_file_skel_name}
+        DEPENDS ${TARGET_OBJS_DIR} ${TARGET_OBJS_DIR}/${bpf_file_skel_name} ${TARGET_OBJS_DIR}/${bpf_file_obj_name}  ${_app_srcs_}
     )
 
+    add_executable(${target_name}  ${_app_srcs_})
+    add_dependencies(${target_name} ${bpf_file_skel_name})
+    target_compile_options(${target_name} PRIVATE -g -O2 -Wall -Wmissing-field-initializers -Werror)
+    target_link_libraries(${target_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libbpf/libbpf.a -lelf -lz)
+    target_include_directories(${target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/arm64 ${LIBBPF_DIR}/include/uapi ${TARGET_OBJS_DIR}/ ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
 
@@ -83,7 +89,7 @@ endfunction()
 add_custom_bpf_exectuable(tlink1 ${TESTLINK_SRC})
 add_custom_bpf_exectuable(tlink2 ${TESTLINK_SRC})
 
-custom_build_bpf_skel_obj(helloworld unittests/helloworld.bpf.c)
+custom_build_bpf_skel_obj(helloworld unittests/helloworld.bpf.c unittests/helloworld.cpp)
 
 
 

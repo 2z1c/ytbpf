@@ -1,12 +1,8 @@
 
+OUTDIRS := build/helloworld.objs
+CFLAGS := -g -O2 -Wall -Wmissing-field-initializers -Werror
+INCLUDES := -I${OUTDIRS}/
+LIBBPF := build/libbpf.a
 
-OUTPUT := $(abspath .output)
-BPFTOOL_SRC := $(abspath ./bpftool/src)
-BPFTOOL_OUTPUT ?= $(abspath $(OUTPUT)/bpftool)
-BPFTOOL ?= $(BPFTOOL_OUTPUT)/bootstrap/bpftool
-
-$(OUTPUT) ${BPFTOOL_OUTPUT}:
-	mkdir -p $@
-
-build:	| ${OUTPUT} ${BPFTOOL_OUTPUT}
-	$(Q)$(MAKE) -C $(BPFTOOL_SRC) ARCH= CROSS_COMPILE=  OUTPUT=$(BPFTOOL_OUTPUT)/  bootstrap -j22
+all:
+	g++ ${CFLAGS}  --static unittests/helloworld.cpp ${LIBBPF} ${INCLUDES}  -lelf -lz -o helloworld.out
