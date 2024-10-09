@@ -55,7 +55,7 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
 
     set(TARGET_OBJS_DIR "${CMAKE_CURRENT_BINARY_DIR}/objs.${target_name}")
     set(BPFCFLAGS "-g" "-O2" "-Wall")
-    set(BPF_SKEL_INCLUDES "-I${CMAKE_CURRENT_SOURCE_DIR}/arm64" "-I${LIBBPF_DIR}/include/uapi" "-I${CMAKE_CURRENT_SOURCE_DIR}")
+    set(BPF_SKEL_INCLUDES "-I${CMAKE_CURRENT_SOURCE_DIR}/include/arm64" "-I${LIBBPF_DIR}/include/uapi" "-I${CMAKE_CURRENT_SOURCE_DIR}" "-I${CMAKE_CURRENT_SOURCE_DIR}/include")
 
     set(GXX_COMPILE_FLAGS "-Wall -O2 -std=c++17")
     # message("BPF_SRC: ${_bpf_src_} ${bpf_file_src_name} ${bpf_file_skel_name} ${bpf_file_obj_name}")
@@ -81,7 +81,7 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
     set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     target_compile_options(${target_name} PRIVATE -g -O2 -Wall -Wmissing-field-initializers -Werror)
     target_link_libraries(${target_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libbpf/libbpf.a -lelf -lz)
-    target_include_directories(${target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/arm64 ${LIBBPF_DIR}/include/uapi ${TARGET_OBJS_DIR}/ ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(${target_name} PRIVATE ${TARGET_OBJS_DIR}/ )
 
 endfunction()
 
