@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(ytbpf_resources)
 # build libbpf static library
-set(LIBBPF_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libbpf)
+set(LIBBPF_DIR ${CMAKE_CURRENT_LIST_DIR}/libbpf)
 file (GLOB LIBBPF_SOURCES ${LIBBPF_DIR}/src/*.[hc])
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/libbpf/libbpf.a
@@ -18,7 +18,7 @@ add_custom_target(
 )
 
 # build bpftool
-set(BPFTOOL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bpftool)
+set(BPFTOOL_DIR ${CMAKE_CURRENT_LIST_DIR}/bpftool)
 file(GLOB_RECURSE BPFTOOL_SOURCES ${BPFTOOL_DIR}/*.[ch])
 set(BPFTOOL ${CMAKE_CURRENT_BINARY_DIR}/bpftool/bootstrap/bpftool)
 
@@ -55,7 +55,7 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
 
     set(TARGET_OBJS_DIR "${CMAKE_CURRENT_BINARY_DIR}/objs.${target_name}")
     set(BPFCFLAGS "-g" "-O2" "-Wall")
-    set(BPF_SKEL_INCLUDES "-I${CMAKE_CURRENT_SOURCE_DIR}/include/arm64" "-I${LIBBPF_DIR}/include/uapi" "-I${CMAKE_CURRENT_SOURCE_DIR}" "-I${CMAKE_CURRENT_SOURCE_DIR}/include")
+    set(BPF_SKEL_INCLUDES "-I${CMAKE_CURRENT_LIST_DIR}/include/arm64" "-I${LIBBPF_DIR}/include/uapi" "-I${CMAKE_CURRENT_LIST_DIR}" "-I${CMAKE_CURRENT_LIST_DIR}/include")
 
     set(GXX_COMPILE_FLAGS "-Wall -O2 -std=c++17")
     # message("BPF_SRC: ${_bpf_src_} ${bpf_file_src_name} ${bpf_file_skel_name} ${bpf_file_obj_name}")
@@ -65,8 +65,8 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
         DEPENDS ${_bpf_src_} bpftool_obj libbpf_obj
         COMMAND mkdir -p ${TARGET_OBJS_DIR}
         # bpf.o
-        # COMMAND echo "clang-14 ${BPFCFLAGS} -target bpf -D__TARGET_ARCH_arm64 ${BPF_SKEL_INCLUDES} -c ${CMAKE_CURRENT_SOURCE_DIR}/${_bpf_src_} -o ${TARGET_OBJS_DIR}/${bpf_file_obj_name}"
-        COMMAND clang-14 -g -O2 -Wall -target bpf -D__TARGET_ARCH_arm64 ${BPF_SKEL_INCLUDES} -c ${CMAKE_CURRENT_SOURCE_DIR}/${_bpf_src_} -o ${TARGET_OBJS_DIR}/${bpf_file_obj_name}
+        # COMMAND echo "clang-14 ${BPFCFLAGS} -target bpf -D__TARGET_ARCH_arm64 ${BPF_SKEL_INCLUDES} -c ${CMAKE_CURRENT_LIST_DIR}/${_bpf_src_} -o ${TARGET_OBJS_DIR}/${bpf_file_obj_name}"
+        COMMAND clang-14 -g -O2 -Wall -target bpf -D__TARGET_ARCH_arm64 ${BPF_SKEL_INCLUDES} -c ${CMAKE_CURRENT_LIST_DIR}/${_bpf_src_} -o ${TARGET_OBJS_DIR}/${bpf_file_obj_name}
         # skel.h
         COMMAND ${BPFTOOL} gen skeleton ${TARGET_OBJS_DIR}/${bpf_file_obj_name} > ${TARGET_OBJS_DIR}/${bpf_file_skel_name}
     )
