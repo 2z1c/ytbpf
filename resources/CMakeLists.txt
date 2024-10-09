@@ -51,8 +51,9 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
 
     string(REPLACE ".bpf.c" ".skel.h" bpf_file_skel_name ${bpf_file_src_name})
     string(REPLACE ".bpf.c" ".bpf.o" bpf_file_obj_name ${bpf_file_src_name})
+    set(bpf_virt_obj_target "${target_name}.virt.bpf")
 
-    set(TARGET_OBJS_DIR "${CMAKE_CURRENT_BINARY_DIR}/${target_name}.objs")
+    set(TARGET_OBJS_DIR "${CMAKE_CURRENT_BINARY_DIR}/objs.${target_name}")
     set(BPFCFLAGS "-g" "-O2" "-Wall")
     set(BPF_SKEL_INCLUDES "-I${CMAKE_CURRENT_SOURCE_DIR}/arm64" "-I${LIBBPF_DIR}/include/uapi" "-I${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -71,25 +72,28 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_ _app_srcs_)
     )
 
     add_custom_target(
-        ${bpf_file_skel_name}
+        ${bpf_virt_obj_target}
         DEPENDS ${TARGET_OBJS_DIR} ${TARGET_OBJS_DIR}/${bpf_file_skel_name} ${TARGET_OBJS_DIR}/${bpf_file_obj_name}  ${_app_srcs_}
     )
 
     add_executable(${target_name}  ${_app_srcs_})
-    add_dependencies(${target_name} ${bpf_file_skel_name})
+    add_dependencies(${target_name} ${bpf_virt_obj_target})
+    set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     target_compile_options(${target_name} PRIVATE -g -O2 -Wall -Wmissing-field-initializers -Werror)
     target_link_libraries(${target_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libbpf/libbpf.a -lelf -lz)
     target_include_directories(${target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/arm64 ${LIBBPF_DIR}/include/uapi ${TARGET_OBJS_DIR}/ ${CMAKE_CURRENT_SOURCE_DIR})
+
 endfunction()
 
 
 
 
 
-add_custom_bpf_exectuable(tlink1 ${TESTLINK_SRC})
-add_custom_bpf_exectuable(tlink2 ${TESTLINK_SRC})
+# add_custom_bpf_exectuable(tlink1 ${TESTLINK_SRC})
+# add_custom_bpf_exectuable(tlink2 ${TESTLINK_SRC})
 
 custom_build_bpf_skel_obj(helloworld unittests/helloworld.bpf.c unittests/helloworld.cpp)
+custom_build_bpf_skel_obj(hello1 unittests/helloworld.bpf.c unittests/helloworld.cpp)
 
 
 
