@@ -12,8 +12,8 @@ add_custom_command(
     DEPENDS ${LIBBPF_SOURCES}
     COMMENT "build static libbpf libary"
     # COMMENT "make -C ${LIBBPF_DIR}/src BUILD_STATIC_ONLY=1 OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf DESTDIR=${CMAKE_CURRENT_BINARY_DIR} INCLUDEDIR= LIBDIR= UAPIDIR= -j22 install"
-    COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/libbpf
-    COMMAND make -C ${LIBBPF_DIR}/src BUILD_STATIC_ONLY=1 OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf INCLUDEDIR= LIBDIR= UAPIDIR= -j22 
+    COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/build.libbpf
+    COMMAND make -C ${LIBBPF_DIR}/src BUILD_STATIC_ONLY=1 OBJDIR=${CMAKE_CURRENT_BINARY_DIR}/build.libbpf DESTDIR=${CMAKE_CURRENT_BINARY_DIR}/libbpf INCLUDEDIR= LIBDIR= UAPIDIR= -j22 install
 )
 add_custom_target(
     libbpf_obj 
@@ -39,6 +39,9 @@ add_custom_target(
     DEPENDS ${BPFTOOL}
 )
 
+
+file(GLOB BPF_COMMON_OBJ_SRC ${RESOURCES_DIR}/bpf.common/*.c)
+
 function(custom_build_bpf_skel_obj target_name _bpf_src_)
     # string(REPLACE ".bpf.c" ".skel.h"  "${_bpf_src_}")
     get_filename_component(bpf_file_src_name "${_bpf_src_}" NAME)
@@ -49,7 +52,7 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_)
 
     set(TARGET_OBJS_DIR "${CMAKE_CURRENT_BINARY_DIR}/objs.${target_name}")
     set(BPFCFLAGS "-g" "-O2" "-Wall")
-    set(BPF_SKEL_INCLUDES "-I${RESOURCES_DIR}/include/arm64" "-I${LIBBPF_DIR}/include/uapi" "-I${RESOURCES_DIR}/include")
+    set(BPF_SKEL_INCLUDES "-I${RESOURCES_DIR}/include/arm64" "-I${LIBBPF_DIR}/include/uapi" "-I${RESOURCES_DIR}/include" "-I${CMAKE_CURRENT_BINARY_DIR}/libbpf")
 
     set(GXX_COMPILE_FLAGS "-Wall -O2 -std=c++17")
     # message("BPF_SRC: ${_bpf_src_} ${bpf_file_src_name} ${bpf_file_skel_name} ${bpf_file_obj_name}")
@@ -72,12 +75,11 @@ function(custom_build_bpf_skel_obj target_name _bpf_src_)
     )
 
 
-    message("ARGN    =   ${ARGN}")
-    add_executable(${target_name}  ${ARGN})
+    add_executable(${target_name}  ${ARGN} ${BPF_COMMON_OBJ_SRC})
     add_dependencies(${target_name} ${bpf_virt_obj_target})
     set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     target_compile_options(${target_name} PRIVATE -g -O2 -Wall -Wmissing-field-initializers -Werror)
     target_link_options(${target_name} PRIVATE "-static")
     target_link_libraries(${target_name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libbpf/libbpf.a -lelf -lz)
-    target_include_directories(${target_name} PRIVATE ${TARGET_OBJS_DIR}/ )
+    target_include_directories(${target_name} PRIVATE ${TARGET_OBJS_DIR}/ ${RESOURCES_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/libbpf)
 endfunction()

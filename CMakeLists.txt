@@ -14,3 +14,12 @@ custom_build_bpf_skel_obj(
   resources/unittests/helloworld.bpf.c 
   resources/unittests/helloworld.cpp
 )
+
+custom_build_bpf_skel_obj(
+  memleak
+  bpf-tools/memleak/memleak.bpf.c
+  bpf-tools/memleak/memleak.c
+)
+
+target_include_directories(memleak PRIVATE bpf-tools/memleak)
+
